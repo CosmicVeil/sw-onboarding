@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { CommandHistory } from "../utils/types";
 
-const REFETCH_INTERVAL_MS = 2000
+const REFETCH_INTERVAL_MS = 2000;
 
 export function useCommandHistory(
   commandId: string,
