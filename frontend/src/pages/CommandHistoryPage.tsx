@@ -2,11 +2,16 @@ import { createColumnHelper } from "@tanstack/react-table";
 import Table from "../components/Table";
 import type { CommandHistory } from "../utils/types";
 import { useCommandHistory } from "../hooks/useCommandHistory";
+import { useState } from "react";
 
 const columnHelper = createColumnHelper<CommandHistory>();
 
 const columns = [
-  // TODO: (STEP 8) Define the columns needed for the CommandHistory table.
+  columnHelper.accessor("id", { header: "id" }),
+  columnHelper.accessor("command_id", { header: "command_id" }),
+  columnHelper.accessor("status", { header: "status" }),
+  columnHelper.accessor("params", { header: "params" }),
+  columnHelper.accessor("created_at", { header: "created_at" }),
 ];
 
 /**
@@ -14,13 +19,22 @@ const columns = [
  * @return tsx element of CommandHistory component
  */
 function CommandHistoryPage() {
-  // TODO: (STEP 8) Fetch the command history with useCommandHistory and pass the resulting
-  // CommandHistory[] directly to the Table component.
-  //
-  // The page must provide a way for the user to select which command's audit log they want to view.
-  // The selected command should determine which command history is fetched.
-  // The table should communicate that this is an audit log.
-  // The table should be centred on the page.
+  const [value, setValue] = useState("");
+
+  const { data, isLoading, isError } = useCommandHistory(value, 500);
+
+  let content;
+  if (isLoading) content = <p>Loading...</p>;
+  else if (isError) content = <p>Error</p>;
+  else if (data) content = <Table data={data} columns={columns} />;
+
+  return (
+    <div className="...centering classes...">
+      <h1>.Audit Log</h1>
+      {<input value={value} onChange={(e) => setValue(e.target.value)} />}
+      {content}
+    </div>
+  );
 }
 
 export default CommandHistoryPage;

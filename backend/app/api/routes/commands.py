@@ -3,7 +3,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
+from sqlalchemy.exc import IntegrityError
 
+from app.api.routes.command_history import CommandHistoryRepo
 from app.api.schemas.requests import CreateCommandRequest, UpdateCommandRequest
 from app.api.schemas.responses import CommandResponse, CommandsResponse, DeleteCommandResponse
 from app.database.dal import DAL
@@ -43,8 +45,7 @@ async def get_command(command_id: UUID, commands: CommandsRepo) -> CommandRespon
 
 @commands_router.post("/")
 async def create_command(
-    request: CreateCommandRequest,
-    commands: CommandsRepo,
+    request: CreateCommandRequest, commands: CommandsRepo, command_histories: CommandHistoryRepo
 ) -> CommandResponse:
     """
     Create a new command entry with status set to pending.
@@ -54,20 +55,24 @@ async def create_command(
     :return: The newly created command.
     """
     # TODO: (STEP 4) Wire CommandHistory table appending into this route!
+
     created_command = await commands.create(
         {
             "type_": request.type_,
             "params": request.params,
         }
     )
+
+    data = {"command_id": created_command.id, "status": created_command.status, "params": created_command.params}
+
+    await command_histories.create(data)
+
     return CommandResponse(data=created_command)
 
 
 @commands_router.patch("/{command_id}")
 async def update_command(
-    command_id: UUID,
-    request: UpdateCommandRequest,
-    commands: CommandsRepo,
+    command_id: UUID, request: UpdateCommandRequest, commands: CommandsRepo, command_histories: CommandHistoryRepo
 ) -> CommandResponse:
     """
     Partially update a command's status, type, or parameters.
@@ -80,15 +85,25 @@ async def update_command(
     :raises HTTPException: 422 if the repository rejects the update, e.g. a value of the wrong type or a
         ``type_`` that is not an existing main command. A rejected update leaves the command unchanged.
     """
-    # TODO: (STEP 3) Implement this stub!
-    # TODO: (STEP 4) Wire CommandHistory table appending into this route!
-    return CommandResponse(data=None)
+
+    changes = request.model_dump(exclude_unset=True)
+    try:
+        command = await commands.update(command_id, changes)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except (RuntimeError, TypeError, IntegrityError) as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    data = {"command_id": command.id, "status": command.status, "params": command.params}
+
+    await command_histories.create(data)
+
+    return CommandResponse(data=command)
 
 
 @commands_router.delete("/{command_id}")
 async def delete_command(
-    command_id: UUID,
-    commands: CommandsRepo,
+    command_id: UUID, commands: CommandsRepo, command_histories: CommandHistoryRepo
 ) -> DeleteCommandResponse:
     """
     Delete a command by ID.
@@ -97,10 +112,16 @@ async def delete_command(
     :param commands: injected Command repository.
     :return: Confirmation message with the deleted command ID.
     """
-    # TODO: (STEP 4) Wire CommandHistory table appending into this route!
+
     try:
-        await commands.get_by_id(command_id)
+        command = await commands.get_by_id(command_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
+
+    data = {"command_id": command.id, "status": command.status, "params": command.params}
+
     await commands.delete_by_id(command_id)
+
+    await command_histories.create(data)
+
     return DeleteCommandResponse(message=f"Command {command_id} deleted successfully")
