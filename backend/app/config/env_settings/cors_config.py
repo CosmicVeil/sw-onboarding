@@ -15,7 +15,6 @@ class CORSConfig(BaseSettings):
     allow_headers: list[str]
 
     model_config = SettingsConfigDict(env_prefix="CORS_")
-    # TODO: (STEP 5) Implement this stub!
 
 
 def add_cors_middleware(app: FastAPI) -> None:
@@ -24,7 +23,6 @@ def add_cors_middleware(app: FastAPI) -> None:
 
     :param app: FastAPI app to add the middleware to
     """
-    # TODO: (STEP 5) Update this function to properly attach the CORS middleware.
     cors_settings = CORSConfig()
 
     app.add_middleware(

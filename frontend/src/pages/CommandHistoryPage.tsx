@@ -21,7 +21,7 @@ const columns = [
 function CommandHistoryPage() {
   const [value, setValue] = useState("");
 
-  const { data, isLoading, isError } = useCommandHistory(value, 500);
+  const { data, isLoading, isError } = useCommandHistory(value);
 
   let content;
   if (isLoading) content = <p>Loading...</p>;

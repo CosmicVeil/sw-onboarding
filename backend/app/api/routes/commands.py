@@ -54,7 +54,6 @@ async def create_command(
     :param commands: injected Command repository.
     :return: The newly created command.
     """
-    # TODO: (STEP 4) Wire CommandHistory table appending into this route!
 
     created_command = await commands.create(
         {
