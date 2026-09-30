@@ -9,6 +9,7 @@ export function useCommandHistory(
 ): UseQueryResult<CommandHistory[]> {
   return useQuery({
     queryKey: [commandId],
+    enabled: !!commandId,
     queryFn: async () => {
       const res = await fetch(
         `http://localhost:8001/api/commands/${commandId}/history`,

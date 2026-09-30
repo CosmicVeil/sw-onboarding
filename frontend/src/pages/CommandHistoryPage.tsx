@@ -27,11 +27,12 @@ function CommandHistoryPage() {
   if (isLoading) content = <p>Loading...</p>;
   else if (isError) content = <p>Error</p>;
   else if (data) content = <Table data={data} columns={columns} />;
+  else content = <p> Enter a command ID to view its audit log. </p>
 
   return (
-    <div className="...centering classes...">
-      <h1>.Audit Log</h1>
-      {<input value={value} onChange={(e) => setValue(e.target.value)} />}
+    <div className="flex flex-col items-center gap-4">
+      <h1>Audit Log</h1>
+      <input placeholder = {"Enter a command ID!"} value={value} onChange={(e) => setValue(e.target.value)} />
       {content}
     </div>
   );
